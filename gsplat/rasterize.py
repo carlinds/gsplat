@@ -24,6 +24,7 @@ def rasterize_gaussians(
     img_width: int,
     block_width: int,
     background: Optional[Float[Tensor, "channels"]] = None,
+    ignore_pixels: Optional[Float[Tensor, "channels"]] = None,
     return_alpha: Optional[bool] = False,
 ) -> Tensor:
     """Rasterizes 2D gaussians by sorting and binning gaussian intersections for each tile and returns an N-dimensional output using alpha-compositing.
@@ -65,6 +66,15 @@ def rasterize_gaussians(
             colors.shape[-1], dtype=torch.float32, device=colors.device
         )
 
+    if ignore_pixels is not None:
+        assert (
+            ignore_pixels.shape[0] == img_height * img_width
+        ), f"incorrect shape of ignore_pixels tensor, expected shape {img_height * img_width}"
+    else:
+        ignore_pixels = torch.zeros(
+            img_height * img_width, dtype=torch.bool, device=colors.device
+        )
+
     if xys.ndimension() != 2 or xys.size(1) != 2:
         raise ValueError("xys must have dimensions (N, 2)")
 
@@ -83,6 +93,7 @@ def rasterize_gaussians(
         img_width,
         block_width,
         background.contiguous(),
+        ignore_pixels.contiguous(),
         return_alpha,
     )
 
@@ -104,6 +115,7 @@ class _RasterizeGaussians(Function):
         img_width: int,
         block_width: int,
         background: Optional[Float[Tensor, "channels"]] = None,
+        ignore_pixels: Optional[Float[Tensor, "channels"]] = None,
         return_alpha: Optional[bool] = False,
     ) -> Tensor:
         num_points = xys.size(0)
@@ -159,6 +171,7 @@ class _RasterizeGaussians(Function):
                 colors,
                 opacity,
                 background,
+                ignore_pixels
             )
 
         ctx.img_width = img_width
@@ -250,5 +263,6 @@ class _RasterizeGaussians(Function):
             None,  # img_width
             None,  # block_width
             None,  # background
+            None,  # ignore_pixels
             None,  # return_alpha
         )

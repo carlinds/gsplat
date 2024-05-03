@@ -386,7 +386,8 @@ rasterize_forward_tensor(
     const torch::Tensor &conics,
     const torch::Tensor &colors,
     const torch::Tensor &opacities,
-    const torch::Tensor &background
+    const torch::Tensor &background,
+    const torch::Tensor &ignore_pixels
 ) {
     DEVICE_GUARD(xys);
     CHECK_INPUT(gaussian_ids_sorted);
@@ -438,7 +439,8 @@ rasterize_forward_tensor(
         final_Ts.contiguous().data_ptr<float>(),
         final_idx.contiguous().data_ptr<int>(),
         (float3 *)out_img.contiguous().data_ptr<float>(),
-        *(float3 *)background.contiguous().data_ptr<float>()
+        *(float3 *)background.contiguous().data_ptr<float>(),
+        (bool *)ignore_pixels.contiguous().data_ptr<bool>()
     );
 
     return std::make_tuple(out_img, final_Ts, final_idx);

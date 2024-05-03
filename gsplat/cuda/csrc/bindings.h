@@ -125,7 +125,8 @@ std::tuple<
     const torch::Tensor &conics,
     const torch::Tensor &colors,
     const torch::Tensor &opacities,
-    const torch::Tensor &background
+    const torch::Tensor &background,
+    const torch::Tensor &ignore_pixels
 );
 
 std::tuple<

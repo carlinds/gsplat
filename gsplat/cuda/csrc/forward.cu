@@ -305,7 +305,8 @@ __global__ void rasterize_forward(
     float* __restrict__ final_Ts,
     int* __restrict__ final_index,
     float3* __restrict__ out_img,
-    const float3& __restrict__ background
+    const float3& __restrict__ background,
+    const bool* __restrict__ ignore_pixels
 ) {
     // each thread draws one pixel, but also timeshares caching gaussians in a
     // shared tile
@@ -321,11 +322,12 @@ __global__ void rasterize_forward(
     float px = (float)j + 0.5;
     float py = (float)i + 0.5;
     int32_t pix_id = i * img_size.x + j;
+    bool ignore_pix = ignore_pixels[pix_id];
 
     // return if out of bounds
     // keep not rasterizing threads around for reading data
     bool inside = (i < img_size.y && j < img_size.x);
-    bool done = !inside;
+    bool done = !inside || ignore_pix;
 
     // have all threads in tile process the same gaussians in batches
     // first collect gaussians between range.x and range.y in batches
